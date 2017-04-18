@@ -83,14 +83,14 @@ class Graph:
 
     def isObstacle(self, x, y):
         # builds borders for the "grid"
-
-
-
-
         listIndex = y * self.width + x
         yes = self.cellStates[listIndex] > 50
         # print "Is obstacle?", (x,y), " ",yes
         return yes
+
+    def cellValue(self, node):
+        listIndex = node.y * self.width + node.x
+        return self.cellStates[listIndex]
  
  # takes in two nodes as defined above and returns the 
 def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publishAll = None):

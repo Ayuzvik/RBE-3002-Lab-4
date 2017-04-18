@@ -21,15 +21,6 @@
 
   <param name="/use_sim_time" value="true"/>
 
-  <!--  ************* Path Planning Node **************  -->
-  <node pkg="final" type="lab3_pathPlanning.py" name="lab3_pathPlanning"/>
-
-  <!--  ************* Robot Driving Node **************  -->
-  <node pkg="final" type="lab2_navigation.py" name="lab2_navigation"/>
-
-  <!-- ************** Expanding Borders  **************  -->
-  <node pkg="final" type="ExpandBorders.py" name="expand_borders"/>
-
   <!--  ******************** Stage ********************  -->
   <!-- 
         Publishes transforms:
@@ -88,4 +79,14 @@
 
   <!--  **************** Visualisation ****************  -->
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find Lab_4)/newRvizLab4.rviz"/>
+
+   <!-- ************** Expanding Borders  **************  -->
+  <node pkg="final" type="ExpandBorders.py" name="expand_borders"/>
+
+  <!--  ************* Path Planning Node **************  -->
+  <node pkg="final" type="lab3_pathPlanning.py" name="lab3_pathPlanning"/>
+
+  <!--  ************* Robot Driving Node **************  -->
+  <node pkg="final" type="lab2_navigation.py" name="lab2_navigation"/>
+
 </launch>
