@@ -6,7 +6,7 @@ import rospy, tf, numpy, math, sys
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist, Pose, Point
 from nav_msgs.msg import Odometry, OccupancyGrid
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Quaternion
 #from tf.transformations import euler_from_quaternion
 from nav_msgs.msg import GridCells
 
@@ -70,12 +70,24 @@ def parseMapData(data, width, height):
             print "" # newline after full row
         sys.stdout.write('%4s' %(data[i]))    
 
-def buildPoseStamped(node):
+def buildPoseStamped(node, nextNode):
     msg = PoseStamped()
-    msg.pose.position = nodeToPoint(node)
-    
+    p1 = nodeToPoint(node)
+    p2 = nodeToPoint(nextNode)
 
+    yaw = atan2((p2.y - p1.y),(p2.x-p1.x))
+
+    msg.pose.position = nodeToPoint(node)
+    orientation = tf.transformations.quaternion_from_euler(yaw, 0, 0)
+    msg.pose.orientation.x = orientation[0]
+    msg.pose.orientation.y = orientation[1]
+    msg.pose.orientation.z = orientation[2]
+    msg.pose.orientation.w = orientation[3]
+    print "I made dis:\n", msg
+    dummy = raw_input("Press Enter to send...")
     return msg
+
+
 def publishCells(info, publisher):
     # print "publishing", str(publisher)
 
@@ -129,8 +141,8 @@ def convertInitNode(pose):
         
         print "\n"
         next = waypoints[-1]
-        
-        pub_myWaypoint.publish(buildPoseStamped(next))
+        next2 = waypoints[-2]
+        pub_myWaypoint.publish(buildPoseStamped(next, next2))
         start = next
 
         # dummy = raw_input("Press enter to continue...")
@@ -247,6 +259,7 @@ def run():
 
     sub = rospy.Subscriber("/exp_map", OccupancyGrid, mapCallBack)
     sub_initPose = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, convertInitNode, queue_size=10)   #initail pose 1 
+    sub_intermediatePose = rospy.Subscriber('/intermediatepose', PoseWithCovarianceStamped, convertInitNode, queue_size=10)
     sub_finalPose = rospy.Subscriber('/move_base_simple/goal1', PoseStamped, convertFinalNode, queue_size=10) #goal 1 - need that to avoid Rviz running built in stuff
     sub_exp_map = rospy.Subscriber('/move_base/global_costmap/costmap', OccupancyGrid, readLocalMap, queue_size = 1)
     rospy.sleep(10)

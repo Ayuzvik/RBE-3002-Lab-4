@@ -56,17 +56,17 @@ def navToPose(goal): #+-
     z_q = goal.pose.orientation.z
     w_q = goal.pose.orientation.w
 
-    # quat = goal.pose.orientation         #in quaternion
-    # q = [quat[0], quat[1], quat[2], quat[3]] 
-    # roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
+    quat = goal.pose.orientation         #in quaternion
+    q = [x_q, y_q, z_q, w_q] 
+    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
 
     fx = (math.pow(x_q,2)+math.pow(w_q,2)-math.pow(y_q,2)-math.pow(z_q,2))
     fy = 2 * (x_q * y_q + z_q * w_q)
-    yaw = math.atan2(fy, fx)
+    # yaw = math.atan2(fy, fx)
 
     goalTheta = yaw*(180/math.pi)     #convert to degrees
     th2 = (-1 * goalTheta)
-    print "Get to", (goalX, goalY), " from" , (initPosX,initPosY)
+    print "Get to", (goalX, goalY, goalTheta), " from" , (initPosX, initPosY, startAngleDeg)
     print "angle1", anglef
     print "distance", distanceLeft
     print "goalTheta", goalTheta
@@ -76,7 +76,7 @@ def navToPose(goal): #+-
     rotate(goalTheta)
     newStart = PoseWithCovarianceStamped()
     newStart.pose.pose.position = goal.pose.position
-    newStart.pose.pose.orientation = goal.pose.orientation
+    newStart.pose.pose.orientation = goal.pose.orientation    
     pub_startPose.publish(newStart)
 
 
@@ -231,18 +231,21 @@ def readBumper(msg): #
 def timerCallback(event): #+-
     global pose
     pose = Pose() 
-    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
-    (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
-    pose.position.x = position[0] 
-    pose.position.y = position[1]
-    pose.position.z = position[2]
-    quat = orientation         #in quaternion
-    q = [quat[0], quat[1], quat[2], quat[3]] 
-    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
+    try:
+        # print "Transforming to /odom from /base_footprint"
+        odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+        (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
+        pose.position.x = position[0] 
+        pose.position.y = position[1]
+        pose.position.z = position[2]
+        quat = orientation         #in quaternion
+        q = [quat[0], quat[1], quat[2], quat[3]] 
+        roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
 
-    pose.orientation.z = yaw    
-    theta = math.degrees(yaw)  
-
+        pose.orientation.z = yaw    
+        theta = math.degrees(yaw)  
+    except rospy.RosInterruptException():
+        print "could not transform:\n", pose
 
 # This is the program's main function
 if __name__ == '__main__':  #
@@ -265,7 +268,7 @@ if __name__ == '__main__':  #
 
     # Replace the elipses '...' in the following lines to set up the publishers and subscribers the lab requires
     pub = rospy.Publisher("/cmd_vel_mux/input/teleop", Twist, None, queue_size = 1) # Publisher for commanding robot motion
-    pub_startPose = rospy.Publisher('/initialpose', PoseWithCovarianceStamped, None, queue_size = 1)
+    pub_startPose = rospy.Publisher('/intermediatepose', PoseWithCovarianceStamped, None, queue_size = 1)
     bumper_sub = rospy.Subscriber('mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
     nav_sub = rospy.Subscriber('/mywaypoint', PoseStamped, navToPose, queue_size=10)
     init_sub = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, setInitPose, queue_size=10)
