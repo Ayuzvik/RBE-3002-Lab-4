@@ -1,0 +1,8 @@
+prefix=/home/jakrabbid/RBE-3002-Lab-4/workspace/install
+
+Name: final
+Description: Description of final
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/jakrabbid/RBE-3002-Lab-4/workspace/install/lib 
+Requires: 

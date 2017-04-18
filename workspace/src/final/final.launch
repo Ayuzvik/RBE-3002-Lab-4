@@ -22,13 +22,13 @@
   <param name="/use_sim_time" value="true"/>
 
   <!--  ************* Path Planning Node **************  -->
-  <node pkg="Lab_4" type="lab3_pathPlanning.py" name="lab3_pathPlanning"/>
+  <node pkg="final" type="lab3_pathPlanning.py" name="lab3_pathPlanning"/>
 
   <!--  ************* Robot Driving Node **************  -->
-  <node pkg="Lab_4" type="lab2_navigation.py" name="lab2_navigation"/>
+  <node pkg="final" type="lab2_navigation.py" name="lab2_navigation"/>
 
   <!-- ************** Expanding Borders  **************  -->
-  <node pkg="Lab_4" type="ExpandBorders.py" name="expand_borders"/>
+  <node pkg="final" type="ExpandBorders.py" name="expand_borders"/>
 
   <!--  ******************** Stage ********************  -->
   <!-- 

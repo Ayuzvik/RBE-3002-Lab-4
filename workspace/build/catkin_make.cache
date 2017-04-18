@@ -1,0 +1,2 @@
+final
+-DCATKIN_DEVEL_PREFIX=/home/jakrabbid/RBE-3002-Lab-4/workspace/devel -DCMAKE_INSTALL_PREFIX=/home/jakrabbid/RBE-3002-Lab-4/workspace/install -G Unix Makefiles

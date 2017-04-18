@@ -24,11 +24,11 @@ def moveMsg(linearVel, angularVel): #
     pub.publish(message)
 
 #drive to a goal subscribed as /move_base_simple/goal
-def navToPose(goal): 
+def navToPose(goal): #+-
     global pose
     global initPose
     global first
-    print pose #initPose
+    print pose, initPose
    # flags for pre-build map initial positions
     # if first:
     #     first = False
@@ -45,8 +45,8 @@ def navToPose(goal):
     startAngleRad = pose.orientation.z
     startAngleDeg = startAngleRad * (180/math.pi)
 
-    distanceLeft = math.sqrt(math.pow((goalY),2)+math.pow(goalX,2))
-    goalAngle = math.atan2((goal.pose.position.y), (goal.pose.position.x))
+    distanceLeft = math.sqrt(math.pow((goalY - initPosY),2)+math.pow(goalX-initPosX,2))
+    goalAngle = math.atan2((goal.pose.position.y - initPosY), (goal.pose.position.x - initPosX))
     anglef = goalAngle-startAngleRad 
     anglef *= (180/math.pi)
 
@@ -56,13 +56,17 @@ def navToPose(goal):
     z_q = goal.pose.orientation.z
     w_q = goal.pose.orientation.w
 
+    quat = goal.pose.orientation         #in quaternion
+    q = [quat[0], quat[1], quat[2], quat[3]] 
+    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
+
     fx = (math.pow(x_q,2)+math.pow(w_q,2)-math.pow(y_q,2)-math.pow(z_q,2))
     fy = 2 * (x_q * y_q + z_q * w_q)
-    yaw = math.atan2(fy, fx)
+    # yaw = math.atan2(fy, fx)
 
     goalTheta = yaw*(180/math.pi)     #convert to degrees
     th2 = (-1 * goalTheta)
-    print "Get to", (goalX, goalY), " from" , (initPosX,initPosY)
+    print "Get to", (goalX, goalY, goalTheta), " from" , (initPosX, initPosY, startAngleDeg)
     print "angle1", anglef
     print "distance", distanceLeft
     print "goalTheta", goalTheta
@@ -70,11 +74,15 @@ def navToPose(goal):
     rotate(anglef)
     driveStraight(0.11, distanceLeft)
     rotate(goalTheta)
+    newStart = PoseWithCovarianceStamped()
+    newStart.pose.pose.position = goal.pose.position
+    newStart.pose.pose.orientation = goal.pose.orientation    
+    pub_startPose.publish(newStart)
 
 
 #This function sequentially calls methods to perform a trajectory.
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-def executeTrajectory(): 
+def executeTrajectory(): #
     print "Executing tajectory"
     #Drive forward: 60cm 
     driveStraight(1, 0.6) #FIX SPEED
@@ -90,7 +98,7 @@ def executeTrajectory():
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #This function accepts two wheel velocities and a time interval.
-def spinWheels(u1, u2, time): 
+def spinWheels(u1, u2, time): #
 
     global pub
     #math for linear and angular speeds
@@ -116,7 +124,7 @@ def spinWheels(u1, u2, time):
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #This function accepts a speed and a distance for the robot to move in a straight line
-def driveStraight(speed, distance):
+def driveStraight(speed, distance):#
 
     global pose 
     rospy.Duration(0.2, 0)
@@ -149,7 +157,7 @@ def driveStraight(speed, distance):
 # currently this rotates the robot to match the angle given (w/respect to x_global)
 def rotate(angle):
 
-    
+    #+-
     global pose 
     global odom_list
 
@@ -201,11 +209,11 @@ def driveArc(radius, speed, angle): #
     moveMsg(0, 0) 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# def setInitPose(msg):
-#     global initPose
-#     initPose.pose.position.x = msg.pose.pose.position.x
-#     initPose.pose.position.y = msg.pose.pose.position.y
-#     initPose.pose.orientation.z = msg.pose.pose.orientation.z
+def setInitPose(msg):
+    global initPose
+    initPose.pose.position.x = msg.pose.pose.position.x
+    initPose.pose.position.y = msg.pose.pose.position.y
+    initPose.pose.orientation.z = msg.pose.pose.orientation.z
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Bumper Event Callback function
@@ -220,49 +228,60 @@ def readBumper(msg): #
 # (Optional) If you need something to happen repeatedly at a fixed interval, write the code here.
 # Start the timer with the following line of code: 
 #   rospy.Timer(rospy.Duration(.01), timerCallback)
-def timerCallback(event): 
+def timerCallback(event): #+-
     global pose
     pose = Pose() 
-    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
-    (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
-    pose.position.x = position[0] 
-    pose.position.y = position[1]
-    pose.position.z = position[2]
-    quat = orientation         #in quaternion
-    q = [quat[0], quat[1], quat[2], quat[3]] 
-    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
+    try:
+        print "Transforming to /odom from /base_footprint"
+        odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+        (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
+        pose.position.x = position[0] 
+        pose.position.y = position[1]
+        pose.position.z = position[2]
+        quat = orientation         #in quaternion
+        q = [quat[0], quat[1], quat[2], quat[3]] 
+        roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
 
-    pose.orientation.z = yaw    
-    theta = math.degrees(yaw)  
-
+        pose.orientation.z = yaw    
+        theta = math.degrees(yaw)  
+    except rospy.RosInterruptException():
+        print "could not transform:\n", pose
 
 # This is the program's main function
 if __name__ == '__main__':  #
     # Change this node name to include your username
-    rospy.init_node('ayuzvik_lab_2_node')
+    rospy.init_node('lab2_navigation')
 
     # These are global variables. Write "global <variable_name>" in any other function to gain access to these global variables 
     global pub
     global pose
+    global initPose
+    global pub_startPose
     global odom_tf
     global odom_list
+    global init_sub
+    global init2_sub
+    global first
+    first = True
+    initPose = PoseStamped()
     pose = Pose()
 
     # Replace the elipses '...' in the following lines to set up the publishers and subscribers the lab requires
-    pub = rospy.Publisher("/cmd_vel_mux/input/teleop", Twist, None, queue_size = 10) # Publisher for commanding robot motion
+    pub = rospy.Publisher("/cmd_vel_mux/input/teleop", Twist, None, queue_size = 1) # Publisher for commanding robot motion
+    pub_startPose = rospy.Publisher('/intermediatepose', PoseWithCovarianceStamped, None, queue_size = 1)
     bumper_sub = rospy.Subscriber('mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
-    
-    nav_sub = rospy.Subscriber('/move_base_simple/goal1', PoseStamped, navToPose, queue_size=10)
-    nav_sub = rospy.Subscriber('/initialpose1', PoseStamped, navToPose, queue_size=10)
+    nav_sub = rospy.Subscriber('/mywaypoint', PoseStamped, navToPose, queue_size=10)
+    init_sub = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, setInitPose, queue_size=10)
+    # init2_sub = rospy.Subscriber('/initialpose2', PoseStamped, setInitPose, queue_size=10)
     # Use this object to get the robot's Odometry 
     odom_list = tf.TransformListener()
     
     # Use this command to make the program wait for some seconds
-    rospy.sleep(rospy.Duration(1, 0))
+    # rospy.sleep(rospy.Duration(1, 0))
     print "Starting Lab 2"
 
     #make the robot keep doing something...
-    rospy.Timer(rospy.Duration(0.1), timerCallback)
+    rospy.Timer(rospy.Duration(0.05), timerCallback)
 
     while(not rospy.is_shutdown()): #while  loop
         x=5
