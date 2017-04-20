@@ -18,6 +18,7 @@ from a2star import *
 xAdjust = 0.5
 yAdjust = 0.5
 def mapCallBack(data):
+    global globalMap 
     global mapData
     global width
     global height
@@ -26,6 +27,7 @@ def mapCallBack(data):
     global offsetX
     global offsetY
 
+    globalMap = data
     offsetX = data.info.origin.position.x
     offsetY = data.info.origin.position.y
     mapgrid = data
@@ -113,6 +115,13 @@ def nodeToPoint(node):
     point.y = (node.y * resolution) + (yAdjust * resolution) + offsetY
     return point
 
+def nodeToPointReal(node, xAdj, yAdj):
+    point = Point()
+    point.x = (node.x * resolution) + (xAdj * resolution) + offsetX
+    point.y = (node.y * resolution) + (yAdj * resolution) + offsetY
+    return point
+
+
 def convertInitNode(pose):
     global init_x_cord
     global init_y_cord
@@ -129,7 +138,7 @@ def convertInitNode(pose):
     if start != goal:
         openSet = PriorityQueue()
         costSoFar = {}
-        graph = Graph(width, height, mapData)
+        graph = Graph(width, height, globalMap)
         path, waypoints = runNavByWaypoint(start, goal, graph, openSet, costSoFar, publishAll)
         
         # print waypoints

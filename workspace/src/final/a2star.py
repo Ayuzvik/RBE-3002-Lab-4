@@ -3,6 +3,7 @@
 
 import math
 from Queue import PriorityQueue
+from geometry_msgs.msg import Point
 
 #start with a node definition
 
@@ -39,7 +40,8 @@ class Graph:
         self.width = width
         self.height = height
         self.graph = {}
-        self.cellStates = mapData
+        self.map = mapData
+        self.cellStates = mapData.data
         # self.constructGraph(width, height)
 
     def constructGraph(self, width, height):
@@ -91,6 +93,16 @@ class Graph:
     def cellValue(self, node):
         listIndex = node.y * self.width + node.x
         return self.cellStates[listIndex]
+
+    def convertNodeToPoint(self, node):
+        resolution = self.map.info.resolution
+        offsetX = self.map.info.origin.position.x
+        offsetY = self.map.info.origin.position.y
+        xAdj = yAdj = 0.5
+        point = Point()
+        point.x = (node.x * resolution) + (xAdj * resolution) + offsetX
+        point.y = (node.y * resolution) + (yAdj * resolution) + offsetY
+        return point
  
  # takes in two nodes as defined above and returns the 
 def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publishAll = None):
@@ -103,11 +115,6 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
     print "starting a-star"
 
     while not openSet.empty():
-
-        # print "\nFrontier:"
-        # for n in openSet.queue:
-        #   print str(n[1])
-
         currentNode = openSet.get()[1]
         # print "selected ", currentNode
         
@@ -119,12 +126,6 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
 
         neighbors = graph.getNeighbors(currentNode)
 
-        # print "\nCosts Thus Far:"
-        # for key in costSoFar:
-        #   print key, ":" ,costSoFar[key]
-        # dummy = raw_input("press enter to continue...")
-
-        # print "Expanding ", currentNode, "Estimated: ", currentNode.g+currentNode.h
         for n in neighbors:
             newCost = currentNode.g + graph.distance(n, currentNode)
             # print currentNode, " + ", graph.distance(n, currentNode) 
