@@ -14,7 +14,7 @@ from nav_msgs.msg import OccupancyGrid
 def mapCallback(data):
 	global pub_expMap
 
-	expBy = int(math.ceil(rospy.get_param('expend', 0.2exm)/data.info.resolution))
+	expBy = int(math.ceil(rospy.get_param('expend', 0.2)/data.info.resolution))
 
 	height = data.info.height
 	width = data.info.width
@@ -28,7 +28,7 @@ def mapCallback(data):
 		else:
 			for n in getNeighbors(data, x, expBy):
 				if n > 70:
-					expMap.data[node] = 100
+					expMap.data[x] = 100
 					break
 		
 

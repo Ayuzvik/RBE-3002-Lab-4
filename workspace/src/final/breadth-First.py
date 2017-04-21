@@ -83,7 +83,7 @@ def runBFSearch(globalMap):
     cells = globalMap.data
     graph = Graph(w,h,globalMap)
 
-    start = Node(400, 300, 0, None)
+    start = Node(389, 292, 0, None)
     print "starting bfSearch"
     print findUnknownBF(start, graph)
 
@@ -92,9 +92,11 @@ def runBFSearch(globalMap):
 if __name__ == '__main__':
     #rospy.init_node('bfSearch')
     rospy.init_node('breadth-First')
-    map_sub = rospy.Subscriber('/map', OccupancyGrid, runBFSearch, queue_size = 10)
+
+    #map_sub = rospy.Subscriber('/map', OccupancyGrid, runBFSearch, queue_size = 10)
+   
     # start_sub = rospy.Subscriber('/', PoseWithCovarianceStamped, setStart, queue_size = 10)
-    # map_sub = rospy.Subscriber('/move_base/local_costmap/costmap', OccupancyGrid, runBFSearch, queue_size = 10)
+    map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
     opB_pub = rospy.Publisher('/opB', GridCells, None, queue_size = 10)
     #exp_map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
 
