@@ -27,7 +27,7 @@ def mapCallback(data):
 			expMap.data[x] = -1
 		else:
 			for n in getNeighbors(data, x, expBy):
-				if n > 70:
+				if n > 90:
 					expMap.data[x] = 100
 					break
 		
@@ -53,7 +53,6 @@ if __name__ == '__main__':
 	global map_sub
 
 	rospy.init_node('ExpandBorders')
-	
-	pub_expMap = rospy.Publisher(rospy.get_param('output_map_topic', '/exp_map'), OccupancyGrid, latch=True)
+	pub_expMap = rospy.Publisher(rospy.get_param('output_map_topic', '/exp_map'), OccupancyGrid,latch=True, queue_size = 1)
 	map_sub = rospy.Subscriber(rospy.get_param('input_map_topic', '/map'), OccupancyGrid, mapCallback, queue_size=10)
 	rospy.spin()

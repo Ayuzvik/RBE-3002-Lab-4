@@ -131,14 +131,6 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
             # print currentNode, " + ", graph.distance(n, currentNode) 
             if n not in costSoFar or newCost < costSoFar[n]:
                 costSoFar[n] = newCost
-
-#######################################
-
-                # if(totalCostSoFar(costSoFar)%4 ==0):
-                    # waypoints.append(n)
-
-
-                    ##############################################
                 n.g = newCost
                 n.parent = currentNode
                 n.h = heurisitic(n, goal)

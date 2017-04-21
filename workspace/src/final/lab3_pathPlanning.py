@@ -127,7 +127,9 @@ def convertInitNode(pose):
     global init_y_cord
     global final_x_cord
     global final_y_cord
-    print "converting node"    
+    print "converting node"
+    
+    #init_x_cord, init_y_cord = convertToGridCell(pose.position.x , pose.position.y)        
     init_x_cord, init_y_cord = convertToGridCell(pose.pose.pose.position.x , pose.pose.pose.position.y)
     print "Start: ", (init_x_cord, init_y_cord)
     start = Node.makeNode(init_x_cord, init_y_cord)
@@ -135,7 +137,7 @@ def convertInitNode(pose):
     
     # getNCheck(goal) #runs the getNCheck function
     waypoints = []
-    if start != goal:
+    if start is not goal:
         openSet = PriorityQueue()
         costSoFar = {}
         graph = Graph(width, height, globalMap)
@@ -150,7 +152,10 @@ def convertInitNode(pose):
         
         print "\n"
         next = waypoints[-1]
-        next2 = waypoints[-2]
+        if len(waypoints) > 1:
+            next2 = waypoints[-2]
+        else: 
+            next2 = goal
         pub_myWaypoint.publish(buildPoseStamped(next, next2))
         start = next
 
@@ -159,6 +164,9 @@ def convertInitNode(pose):
 def convertFinalNode(pose):
     global final_x_cord
     global final_y_cord
+    #initPose = pose()
+    
+   # convertInitNode(initPose)
     final_x_cord, final_y_cord = convertToGridCell(pose.pose.position.x, pose.pose.position.y)
     print "Goal:", (final_x_cord, final_y_cord)
     
@@ -264,7 +272,7 @@ def run():
     pub_path = rospy.Publisher("/pathCells", GridCells, queue_size=1) 
     pub_waypoints = rospy.Publisher("/waypointCells", GridCells, queue_size = 1)
     pub_myWaypoint = rospy.Publisher('/mywaypoint',PoseStamped, queue_size = 1)
-    # pun_initPose = rospy.Publisher('/initialpose2',PoseStamped, queue_size = 1)
+    pun_initPose = rospy.Publisher('/initialpose2',PoseStamped, queue_size = 1)
 
     sub = rospy.Subscriber("/exp_map", OccupancyGrid, mapCallBack)
     sub_initPose = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, convertInitNode, queue_size=10)   #initail pose 1 
