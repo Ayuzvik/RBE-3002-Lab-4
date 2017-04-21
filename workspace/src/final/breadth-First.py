@@ -21,13 +21,22 @@ def findUnknownBF(start, graph):
     openSet = Queue()
     found = []
     openSet.put(start)
+
+    cells = GridCells()
+    cells.header.frame_id = 'map'
+    cells.cell_width = resolution 
+    cells.cell_height = resolution
     # while len(openSet) != 0:
     while not openSet.empty():
         current = openSet.queue[0]
-        # print "Examinging: ", current
-        # print "Cell Value", graph.cellValue(current)
+        print "Examinging: ", current
+        print "Cell Value", graph.cellValue(current)
         if graph.cellValue(current) == -1:
             # print "Found -1 at:\n", current
+            found.append(current)
+            point = graph.convertNodeToPoint(current)
+            cells.cells = [point]
+            opB_pub.publish(cells)            
             return current
 
         # for n in openSet.queue:
@@ -38,12 +47,6 @@ def findUnknownBF(start, graph):
                 # print "n", n
                 openSet.put(n)
         found.append(openSet.get())
-
-        
-        cells = GridCells()
-        cells.header.frame_id = 'map'
-        cells.cell_width = resolution 
-        cells.cell_height = resolution
         
     for node in found:
         point = graph.convertNodeToPoint(node)
@@ -80,7 +83,7 @@ def runBFSearch(globalMap):
     cells = globalMap.data
     graph = Graph(w,h,globalMap)
 
-    start = Node(0, 0, 0, None)
+    start = Node(400, 300, 0, None)
     print "starting bfSearch"
     print findUnknownBF(start, graph)
 

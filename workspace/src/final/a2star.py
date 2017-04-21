@@ -149,6 +149,7 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
         #   publishSet.append(tup[1])
 
         # publishAll(publishSet, costSoFar)
+        
     print "DONE!"
     return path
 
