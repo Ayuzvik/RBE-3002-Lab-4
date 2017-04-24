@@ -226,6 +226,8 @@ def readBumper(msg): #
         executeTrajectory()
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+def doACompleteSpin():
+    rotate(360)
 
 # (Optional) If you need something to happen repeatedly at a fixed interval, write the code here.
 # Start the timer with the following line of code: 
@@ -274,8 +276,7 @@ if __name__ == '__main__':  #
     # bumper_sub = rospy.Subscriber('mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
     nav_sub = rospy.Subscriber('/mywaypoint', PoseStamped, navToPose, queue_size=10)
     init_sub = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, setInitPose, queue_size=10)
-    # init2_sub = rospy.Subscriber('/initialpose2', PoseStamped, setInitPose, queue_size=10)
-    # Use this object to get the robot's Odometry 
+    spin_sub = rospy.Subscriber('/doSpin', Twist, doACompleteSpin, queue_size = 10)
     odom_list = tf.TransformListener()
     
     # Use this command to make the program wait for some seconds

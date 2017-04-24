@@ -121,6 +121,11 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
         if currentNode == goal:
             print "Reached ", goal, "from", start
             path = printPath(currentNode, path, start)
+            spin_pub.publish()
+
+
+
+
             return path
             break
 
@@ -172,6 +177,7 @@ if __name__ == '__main__':
     goal = Node(9,9, 0, None)
     graph = Graph(10,10)
     path = aStar(start, goal, graph)
+    spin_pub = rospy.Publisher('/doSpin', Twist, None, queue_size = 1)
     
     
 

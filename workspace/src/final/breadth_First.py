@@ -29,14 +29,17 @@ def findUnknownBF(start, graph):
     # while len(openSet) != 0:
     while not openSet.empty():
         current = openSet.queue[0]
-        print "Examinging: ", current
+        print "Examining: ", current
         print "Cell Value", graph.cellValue(current)
         if graph.cellValue(current) == -1:
             # print "Found -1 at:\n", current
             found.append(current)
             point = graph.convertNodeToPoint(current)
             cells.cells = [point]
-            opB_pub.publish(cells)            
+            opB_pub.publish(cells)
+            pose = PoseStamped()
+            pose.pose.position = point
+            bfsNode_pub.publish(pose)            
             return current
 
         # for n in openSet.queue:
@@ -120,6 +123,7 @@ if __name__ == '__main__':
     # start_sub = rospy.Subscriber('/', PoseWithCovarianceStamped, setStart, queue_size = 10)
     map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
     opB_pub = rospy.Publisher('/opB', GridCells, None, queue_size = 10)
+    bfsNode_pub = rospy.Publisher('/move_base_simple/goal1', PoseStamped,queue_size =1)
     #exp_map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
 
     odom_list = tf.TransformListener()
