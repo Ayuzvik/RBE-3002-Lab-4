@@ -251,23 +251,6 @@ def publishAll(openSet, costSoFar):
     publishCells(openSet, pub_open)
 
 
-def timerCallback(event): #+-
-    global initPose
-    initPose = Pose() 
-
-    # print "Transforming to /odom from /base_footprint"
-    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
-    (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
-    initPose.position.x = position[0] 
-    initPose.position.y = position[1]
-    initPose.position.z = position[2]
-    quat = orientation         #in quaternion
-    q = [quat[0], quat[1], quat[2], quat[3]] 
-    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
-
-    initPose.orientation.z = yaw    
-    theta = math.degrees(yaw)  
-
 def run():
     global pub_open
     global pub_closed
@@ -288,8 +271,27 @@ def run():
 
     # print "Transforming to /odom from /base_footprint"
     global initPose
-    initPose = Pose()
+    initPose = PoseWithCovarianceStamped()
+
+
+
+
     rospy.init_node('lab3_pathPlanning')
+
+    odom_list = tf.TransformListener()
+    # print "Transforming to /odom from /base_footprint"
+    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+    (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
+    initPose.pose.pose.position.x = position[0] 
+    initPose.pose.pose.position.y = position[1]
+    initPose.pose.pose.position.z = position[2]
+    quat = orientation         #in quaternion
+    q = [quat[0], quat[1], quat[2], quat[3]] 
+    roll, pitch, yaw = euler_from_quaternion(q) #from quat to euler 
+
+    initPose.pose.pose.orientation.z = yaw    
+    theta = math.degrees(yaw)  
+
     # timer = rospy.Timer(rospy.Duration(0.0000001), publishAll)
     #gridCellsDet is a topic for sending data. Can rename it to whatever we want
     pub_open = rospy.Publisher("/openCells", GridCells, queue_size=1) 
@@ -297,16 +299,22 @@ def run():
     pub_path = rospy.Publisher("/pathCells", GridCells, queue_size=1) 
     pub_waypoints = rospy.Publisher("/waypointCells", GridCells, queue_size = 1)
     pub_myWaypoint = rospy.Publisher('/mywaypoint',PoseStamped, queue_size = 1)
-    pun_initPose = rospy.Publisher('/initialpose2',PoseStamped, queue_size = 1)
+    pub_initPose = rospy.Publisher('/initialpose2',PoseStamped, queue_size = 1)
 
     sub = rospy.Subscriber("/exp_map", OccupancyGrid, mapCallBack)
-    sub_initPose = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, timerCallback, queue_size=10)   #initail pose 1 
+    #sub_initPose = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, timerCallback, queue_size=10)   #initail pose 1 
     sub_intermediatePose = rospy.Subscriber('/intermediatepose', PoseWithCovarianceStamped, convertInitNode, queue_size=10)
     sub_finalPose = rospy.Subscriber('/move_base_simple/goal1', PoseStamped, convertFinalNode, queue_size=10) #goal 1 - need that to avoid Rviz running built in stuff
     sub_exp_map = rospy.Subscriber('/move_base/global_costmap/costmap', OccupancyGrid, readLocalMap, queue_size = 1)
+    
+    g = rospy.wait_for_message('/move_base_simple/goal1', PoseStamped)
+    rospy.sleep(10)
+    convertInitNode(initPose)
+
+
+
     rospy.sleep(10)
 
-    odom_list = tf.TransformListener()
 
     while (1 and not rospy.is_shutdown()):
         # publishCells(mapData) 
