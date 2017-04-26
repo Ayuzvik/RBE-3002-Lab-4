@@ -72,7 +72,7 @@ def navToPose(goal): #+-
     print "goalTheta", goalTheta
     print "\nstarting pose angle", math.degrees(pose.orientation.z)
     rotate(anglef)
-    driveStraight(0.11, distanceLeft)
+    driveStraight(0.3, distanceLeft)
     rotate(goalTheta)
     newStart = PoseWithCovarianceStamped()
     newStart.pose.pose.position = goal.pose.position
@@ -167,16 +167,16 @@ def rotate(angle):
     goalAngle = angle + math.degrees(pose.orientation.z)
     vel = Twist()
     if angle >= 0:
-        vel.angular.z = 0.11
+        vel.angular.z = 0.7
     else:
-        vel.angular.z = -0.11
+        vel.angular.z = -0.7
 
     if angle > 180:
         angle -= 360
     elif angle < -180:
         angle += 360
     print "angle", angle
-    while abs(error) >= 1.5 and not rospy.is_shutdown():
+    while abs(error) >= 4 and not rospy.is_shutdown():
         print "turning, current pose:", math.degrees(pose.orientation.z)
         pub.publish(vel)
         rospy.sleep(0.001)
@@ -227,7 +227,8 @@ def readBumper(msg): #
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def doACompleteSpin():
-    rotate(360)
+    rotate(180)
+    rotate(-180)
 
 # (Optional) If you need something to happen repeatedly at a fixed interval, write the code here.
 # Start the timer with the following line of code: 
@@ -237,7 +238,7 @@ def timerCallback(event): #+-
     pose = Pose() 
     try:
         # print "Transforming to /odom from /base_footprint"
-        odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+        odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(2.0)) 
         (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
         pose.position.x = position[0] 
         pose.position.y = position[1]
@@ -276,7 +277,7 @@ if __name__ == '__main__':  #
     # bumper_sub = rospy.Subscriber('mobile_base/events/bumper', BumperEvent, readBumper, queue_size=1) # Callback function to handle bumper events
     nav_sub = rospy.Subscriber('/mywaypoint', PoseStamped, navToPose, queue_size=10)
     init_sub = rospy.Subscriber('/initialpose', PoseWithCovarianceStamped, setInitPose, queue_size=10)
-    spin_sub = rospy.Subscriber('/doSpin', Twist, doACompleteSpin, queue_size = 10)
+    #spin_sub = rospy.Subscriber('/spin', Twist, doACompleteSpin, queue_size = 10)
     odom_list = tf.TransformListener()
     
     # Use this command to make the program wait for some seconds
@@ -286,6 +287,8 @@ if __name__ == '__main__':  #
     #make the robot keep doing something...
     rospy.Timer(rospy.Duration(0.05), timerCallback)
 
+    #rotate(-180)
+    #rotate(180)
     while(not rospy.is_shutdown()): #while  loop
         x=5
     #      print"boop?"

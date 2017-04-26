@@ -5,6 +5,21 @@ import math
 from Queue import PriorityQueue
 from geometry_msgs.msg import Point
 
+import rospy, tf, numpy, math, sys
+
+#from kobuki_msgs.msg import BumperEvent
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist, Pose, Point
+from nav_msgs.msg import Odometry, OccupancyGrid
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Quaternion
+#from tf.transformations import euler_from_quaternion
+from nav_msgs.msg import GridCells
+
+#from Queue import PriorityQueue
+from Queue import *
+from math import *
+from lab3_pathPlanning import publishCells
+
 #start with a node definition
 
 class Node:
@@ -69,13 +84,17 @@ class Graph:
                 y = aNode.y + dy
 
                 if not (x == aNode.x and y == aNode.y) and self.isValidLocation(x, y):
-                        neighbors.append(Node.makeNode(x,y, g = aNode.g +1))
+                    if self.isObstacle(x,y):
+                        gCost = 10000000000000000
+                    else:
+                        gCost = aNode.g+1
+                    neighbors.append(Node.makeNode(x,y, g = gCost))
         self.graph[aNode] = neighbors
         return self.graph[aNode]
 
     def isValidLocation(self, x, y):
 
-        yes = self.isInGrid(x, y) and not self.isObstacle(x, y)
+        yes = self.isInGrid(x, y)# and not self.isObstacle(x, y)
         # print "is valid location? ", (x,y), yes
         return yes
 
@@ -121,7 +140,8 @@ def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publish
         if currentNode == goal:
             print "Reached ", goal, "from", start
             path = printPath(currentNode, path, start)
-            spin_pub.publish()
+            # bfs_pub.publish(graph.map)
+            #spin_pub.publish()
 
 
 
@@ -173,11 +193,12 @@ def totalCostSoFar(costList):
 
 
 if __name__ == '__main__':
+    global bfs_pub
     start = Node(0,0,0, None)
     goal = Node(9,9, 0, None)
     graph = Graph(10,10)
     path = aStar(start, goal, graph)
-    spin_pub = rospy.Publisher('/doSpin', Twist, None, queue_size = 1)
+    # bfs_pub = rospy.Publisher('/bfs', OccupancyGrid, queue_size = 1)
     
     
 

@@ -280,7 +280,7 @@ def run():
 
     odom_list = tf.TransformListener()
     # print "Transforming to /odom from /base_footprint"
-    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(5.0)) 
     (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
     initPose.pose.pose.position.x = position[0] 
     initPose.pose.pose.position.y = position[1]

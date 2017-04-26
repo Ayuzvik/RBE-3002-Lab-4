@@ -84,10 +84,13 @@ def runBFSearch(globalMap):
     global initPose
     global offsetX
     global offsetY
+    
+    
+    # map_sub.unregister()
 #########################################
     initPose = Pose()
     odom_list = tf.TransformListener()
-    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(1.0)) 
+    odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(5.0)) 
     (position, orientation) = odom_list.lookupTransform('odom','base_footprint', rospy.Time(0))
     initPose.position.x = position[0] 
     initPose.position.y = position[1]
@@ -122,11 +125,15 @@ if __name__ == '__main__':
    
     # start_sub = rospy.Subscriber('/', PoseWithCovarianceStamped, setStart, queue_size = 10)
     map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
+    # bfs_sub = rospy.Subscriber('/bfs', OccupancyGrid, runBFSearch, queue_size = 10)
     opB_pub = rospy.Publisher('/opB', GridCells, None, queue_size = 10)
     bfsNode_pub = rospy.Publisher('/move_base_simple/goal1', PoseStamped,queue_size =1)
     #exp_map_sub = rospy.Subscriber('/exp_map', OccupancyGrid, runBFSearch, queue_size = 10)
 
     odom_list = tf.TransformListener()
+
+    #spin_pub = rospy.Publisher('/spin', Twist, None, queue_size = 1)
+    #spin_pub.publish()
 
     while not rospy.is_shutdown():
         rospy.spin()
