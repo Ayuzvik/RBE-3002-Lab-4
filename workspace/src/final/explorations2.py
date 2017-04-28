@@ -61,6 +61,21 @@ def frontierFinder():
         print "New Goal", newGoal
         bfsNode_pub.publish(newGoal)
 
+def getUnknownWithNeighbors(graph):
+    width = globalMap.info.width
+    height = globalMap.info.height
+    mappedgridData = map(lambda x: (Node(index(x)%width, index(x)/width, 0, None), index(x)), globalMap.data)
+    unknowns = filter(lambda x: graph.cellValue(x[0]) == -1, mappedgridData)
+
+    frontier = []
+    for tup in unknowns:
+        for node in graph.getNeighbors(tup[0]):
+            if graph.cellValue(node) == 0:
+                frontier.append(tup[0])
+
+    for node in frontier:
+        print node
+
 def breadthFirst(start, graph):
     openSet = Queue()
     found = []

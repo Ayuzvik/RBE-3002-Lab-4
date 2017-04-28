@@ -89,4 +89,7 @@
   <!--  ************* Robot Driving Node **************  -->
   <node pkg="final" type="lab2_navigation.py" name="lab2_navigation"/>
 
+  <!-- ************** Frontier Discovery Node ********* -->
+  <node pkd="final" type="explorations2.py" name="exlploration"/>
+
 </launch>
