@@ -1,12 +1,14 @@
 #!usr/bin/env python
 # a collection of useful functions for conversions
 # or other things for turtlebots
+# @author Everett Harding
 import rospy, tf, copy, math
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, 
 from tf.transformations import euler_from_quaternion
 
-
+# given a tf transformListener, returns the current pose of the robot
+# as a PoseWithCovarianceStamped message
 def getPoseWithCovarianceStampedFromOdom(odom_list):
 	initPose = PoseWithCovarianceStamped
 	odom_list.waitForTransform('odom','base_footprint', rospy.Time(0), rospy.Duration(5.0)) 
@@ -23,10 +25,14 @@ def getPoseWithCovarianceStampedFromOdom(odom_list):
   	
   	return initPose
 
+# given an x and y coordinate, returns the x,y grid coordinates of 
+# the same point in the globalMap
 def convertToGridCoords(xPos, yPos, globalMap):
     resolution = globalMap.info.resolution
     return int(((xPos - globalMap.info.origin.position.x) - 0.5 * resolution) / resolution), int(((yPos - globalMap.info.origin.position.y) - 0.5 * resolution) / resolution)
 
+# given a node and occupancy grid, returns the real-valued point
+# that corresponds to the node
 def nodeToPoint(node, globalMap):
 	resolution = glboalMap.info.resolution
 	offsetX = globalMap.info.origin.position.x
@@ -36,6 +42,8 @@ def nodeToPoint(node, globalMap):
     point.y = (node.y * resolution) + (0.5 * resolution) + offsetY
     return point
 
+# publishes the list of nodes as GridCells to the given
+# rospy publisher
 def publishCells(listOfNodes, publisher, globalMap):
     # print "publishing", str(publisher)
     resolution = globalMap.info.resolution
@@ -52,6 +60,7 @@ def publishCells(listOfNodes, publisher, globalMap):
     #pub.publish(cells)
     publisher.publish(cells)
 
+# builds a poseStamped message that contains the location of the given node
 def buildPoseStamped(node, globalMap):
 	msg = PoseStamped()
 	orientation = tf.transformations.quaternion_from_euler(0, 0, 0)

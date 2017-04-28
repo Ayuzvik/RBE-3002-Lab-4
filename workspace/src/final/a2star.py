@@ -1,27 +1,29 @@
-
+#!/bin/usr/env python
 # a star algorithm file
+# @author Everett Harding
 
 import math
-from Queue import PriorityQueue
 from geometry_msgs.msg import Point
 
 import rospy, tf, numpy, math, sys
 
-#from kobuki_msgs.msg import BumperEvent
 from std_msgs.msg import String
 from geometry_msgs.msg import Twist, Pose, Point
 from nav_msgs.msg import Odometry, OccupancyGrid
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Quaternion
-#from tf.transformations import euler_from_quaternion
 from nav_msgs.msg import GridCells
 
-#from Queue import PriorityQueue
 from Queue import *
 from math import *
 from lab3_pathPlanning import publishCells
 
-#start with a node definition
-
+# Node Class:
+# A node represents a point on the map represented as a grid. Nodes contain
+# the (x,y) location of the node, 
+# the cost (g) of reaching the node from a starting position,
+# the heuristic value (h) of the cost of the node
+# the parent of the node, representing the previous node in a path
+# the probablility that the node represents a space occupied by an obstacle
 class Node:
     
     def __init__(self, x, y, g, parent):
@@ -49,6 +51,9 @@ class Node:
         return 137*self.x + 149 * self.y
 
 
+# the Graph class is build from an OccupancyGrid message, 
+# and is used to populate a graph of Node objects from the map
+# data contained in the occupancy grid.
 class Graph:
 
     def __init__(self, width, height, mapData):
@@ -68,51 +73,55 @@ class Graph:
 
         return neighborsOf
 
+    # returns the real-valued distance between nodeA and nodeB
     def distance(self, nodeA, nodeB):
         return abs(math.sqrt(pow(nodeA.x - nodeB.x, 2) + pow(nodeA.y - nodeB.y,2)))
 
+    # returns a list of nodes that are adjacent to the given node (aNode)
     def getNeighbors(self, aNode):
         if aNode in self.graph:
-            # print aNode, "is in the graph"
             return self.graph[aNode]
 
-        # print aNode, "not in graph"
         neighbors = []
+        # iterate through the eight nodes surrounding aNode
         for dx in [-1,0,1]:
             x = aNode.x + dx
             for dy in [-1,0,1]:
                 y = aNode.y + dy
 
                 if not (x == aNode.x and y == aNode.y) and self.isValidLocation(x, y):
+                    gCost = aNode.g+1
                     if self.isObstacle(x,y):
                         gCost = 10000000000000000
-                    else:
-                        gCost = aNode.g+1
                     neighbors.append(Node.makeNode(x,y, g = gCost))
         self.graph[aNode] = neighbors
         return self.graph[aNode]
 
+    # return true if the given x and y values represent a valid location in the OccupancyGrid
     def isValidLocation(self, x, y):
 
-        yes = self.isInGrid(x, y)# and not self.isObstacle(x, y)
+        yes = self.isInGrid(x, y)# and not self.isObstacle(x, y) #comment out obstacle check to allow "obstacle nodes"
         # print "is valid location? ", (x,y), yes
         return yes
 
+    # return true if the x and y values are within the bounds of the OccupancyGrid
     def isInGrid(self,x, y):
         return x in range(0,self.width) and y in range(0,self.height)
-    # is a hack at the moment, can be fixed later on
 
+    # returns true if the x and y coordiantes represent a point with a high
+    # probaility of being an obstacle
     def isObstacle(self, x, y):
         # builds borders for the "grid"
         listIndex = y * self.width + x
         yes = self.cellStates[listIndex] > 50
-        # print "Is obstacle?", (x,y), " ",yes
         return yes
 
+    # returns the probability of the cell containing an obstacle
     def cellValue(self, node):
         listIndex = node.y * self.width + node.x
         return self.cellStates[listIndex]
 
+    # converts the given node to its corrsponding point in the map frame
     def convertNodeToPoint(self, node):
         resolution = self.map.info.resolution
         offsetX = self.map.info.origin.position.x
@@ -125,57 +134,40 @@ class Graph:
  
  # takes in two nodes as defined above and returns the 
 def aStar(start, goal, graph, openSet = PriorityQueue(), costSoFar = {}, publishAll = None):
-    # global waypoints
     path = []
     openSet.put((0,start))
     costSoFar[start] = 0
-    # for key in graph.graph:
-    #   print key, ": ", str(graph.graph[key])
     print "starting a-star"
 
     while not openSet.empty():
         currentNode = openSet.get()[1]
-        # print "selected ", currentNode
-        
+       
         if currentNode == goal:
             print "Reached ", goal, "from", start
             path = printPath(currentNode, path, start)
-            # bfs_pub.publish(graph.map)
-            #spin_pub.publish()
-
-
-
-
             return path
-            break
 
         neighbors = graph.getNeighbors(currentNode)
 
         for n in neighbors:
             newCost = currentNode.g + graph.distance(n, currentNode)
-            # print currentNode, " + ", graph.distance(n, currentNode) 
             if n not in costSoFar or newCost < costSoFar[n]:
                 costSoFar[n] = newCost
                 n.g = newCost
                 n.parent = currentNode
                 n.h = heurisitic(n, goal)
                 openSet.put(((n.g + n.h), n))
-
-        # publishSet = []
-        # for tup in openSet.queue:
-        #   publishSet.append(tup[1])
-
-        # publishAll(publishSet, costSoFar)
         
-    print "DONE!"
+    print "No path could be found from", start, " to ", goal
     return path
 
-
+# returns the heuristic value of the node
 def heurisitic(node, goal):
     hValue = math.sqrt(pow(node.x - goal.x, 2) + pow(node.y - goal.y, 2))
     # print "H from", node, "to", goal, " = ", hValue
     return hValue
 
+# recursively prints the path found by a* function
 def printPath(node, path, start):
     path.append(node)
     if node.parent is not None and node != start:
